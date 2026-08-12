@@ -1,3 +1,4 @@
+// dùng để kéo bài báo về
 package main
 
 func main() {
