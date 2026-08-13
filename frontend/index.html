@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsBot - Personalized Chatbot for Newsletters</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                </div>
+                <span>NewsBot</span>
+            </div>
+
+            <div class="nav-menu">
+                <div class="nav-title">Quản lý nội dung</div>
+                <div class="nav-item active" onclick="switchView('view-news-feed', this)">
+                    <i class="fa-solid fa-newspaper"></i>
+                    <span>Bảng tin tức</span>
+                </div>
+                <div class="nav-item" onclick="switchView('view-sources', this)">
+                    <i class="fa-solid fa-rss"></i>
+                    <span>Nguồn & Chuyên mục</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- Topbar: Search & Filter -->
+            <header class="topbar">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Tìm kiếm bài báo, từ khóa...">
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="filter-group">
+                        <label for="sort-by">Sắp xếp:</label>
+                        <select id="sort-by" class="filter-select">
+                            <option value="newest">Mới nhất</option>
+                            <option value="oldest">Cũ nhất</option>
+                        </select>
+                    </div>
+                    <div class="user-profile-sm">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=3b82f6&color=fff" alt="Admin">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Bảng điều khiển tin tức (News Feed Dashboard) -->
+            <section id="view-news-feed" class="view-section active">
+                <div class="section-header">
+                    <h2>Tin tức mới nhất</h2>
+                    <p class="text-muted">Tổng hợp tự động từ các nguồn tin đã đăng ký.</p>
+                </div>
+
+                <div class="news-grid">
+                    <!-- News Card 1 -->
+                    <div class="news-card" onclick="openArticle()">
+                        <div class="news-meta">
+                            <span class="source-badge vnexpress">VnExpress</span>
+                            <span class="category-text">Công nghệ</span>
+                        </div>
+                        <h3 class="news-title">Apple ra mắt tính năng AI mới trên iOS 18</h3>
+                        <p class="news-summary">Apple Intelligence mang đến hàng loạt cải tiến vượt trội về khả năng
+                            hiểu ngôn ngữ, chỉnh sửa ảnh và trợ lý Siri thông minh hơn...</p>
+                        <div class="news-footer">
+                            <span class="time"><i class="fa-regular fa-clock"></i> 10 phút trước</span>
+                        </div>
+                    </div>
+
+                    <!-- News Card 2 -->
+                    <div class="news-card" onclick="openArticle()">
+                        <div class="news-meta">
+                            <span class="source-badge tuoitre">Tuổi Trẻ</span>
+                            <span class="category-text">Kinh doanh</span>
+                        </div>
+                        <h3 class="news-title">Thị trường bất động sản có dấu hiệu phục hồi</h3>
+                        <p class="news-summary">Nhiều dự án mới bắt đầu rục rịch triển khai, lượng giao dịch trong tháng
+                            qua đã tăng 20% so với cùng kỳ năm trước...</p>
+                        <div class="news-footer">
+                            <span class="time"><i class="fa-regular fa-clock"></i> 1 giờ trước</span>
+                        </div>
+                    </div>
+
+                    <!-- News Card 3 -->
+                    <div class="news-card" onclick="openArticle()">
+                        <div class="news-meta">
+                            <span class="source-badge dantri">Dân Trí</span>
+                            <span class="category-text">Thể thao</span>
+                        </div>
+                        <h3 class="news-title">Đội tuyển Việt Nam chốt danh sách thi đấu</h3>
+                        <p class="news-summary">HLV trưởng vừa công bố danh sách 23 cầu thủ chính thức sẽ tham dự giải
+                            đấu khu vực sắp tới với nhiều gương mặt trẻ...</p>
+                        <div class="news-footer">
+                            <span class="time"><i class="fa-regular fa-clock"></i> 3 giờ trước</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="pagination">
+                    <button class="page-btn" disabled><i class="fa-solid fa-chevron-left"></i> Trước</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">Sau <i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </section>
+
+            <!-- Màn hình Đọc chi tiết bài viết (Article Reader View) -->
+            <section id="view-article" class="view-section" style="display: none;">
+                <button class="back-btn"
+                    onclick="switchView('view-news-feed', document.querySelector('.nav-item.active'))">
+                    <i class="fa-solid fa-arrow-left"></i> Quay lại bảng tin
+                </button>
+
+                <article class="article-full" id="article-detail-container">
+                    <div class="article-meta">
+                        <span id="detail-source-badge" class="source-badge"></span>
+                        <span id="detail-time-stamp" class="time-stamp"></span>
+                    </div>
+                    <h1 id="detail-title" class="article-title"></h1>
+
+                    <div id="article-summary-box" class="article-summary-box" style="display: none;">
+                        <div class="summary-header">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Tóm Tắt
+                        </div>
+                        <div id="detail-summary-content" class="summary-content"></div>
+                    </div>
+
+                    <div id="detail-content" class="article-content">
+                        <!-- Nội dung sẽ được render từ API -->
+                    </div>
+
+                    <div class="article-source-link">
+                        <a id="detail-source-link" href="#" target="_blank" class="source-link-btn">
+                            <i class="fa-solid fa-up-right-from-square"></i> Đọc bài gốc
+                        </a>
+                    </div>
+                </article>
+            </section>
+
+            <!-- Màn hình Quản lý nguồn và chuyên mục (Sources Management) -->
+            <section id="view-sources" class="view-section" style="display: none;">
+                <div class="section-header flex-between">
+                    <div>
+                        <h2>Quản lý Nguồn tin (RSS)</h2>
+                        <p class="text-muted">Thêm, sửa, xóa và theo dõi trạng thái cào tin.</p>
+                    </div>
+                    <button class="btn-primary"><i class="fa-solid fa-plus"></i> Thêm Nguồn mới</button>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nguồn báo</th>
+                                <th>Chuyên mục</th>
+                                <th>Đường dẫn RSS</th>
+                                <th>Trạng thái Cào</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="source-name"><i class="fa-solid fa-newspaper text-primary"></i>
+                                        VnExpress</div>
+                                </td>
+                                <td>Công nghệ</td>
+                                <td><code class="rss-link">https://vnexpress.net/rss/so-hoa.rss</code></td>
+                                <td><span class="status-badge-inline active"><i class="fa-solid fa-circle-check"></i>
+                                        Đang quét (5p/lần)</span></td>
+                                <td>
+                                    <button class="action-btn edit" title="Sửa"><i class="fa-solid fa-pen"></i></button>
+                                    <button class="action-btn delete" title="Xóa"><i
+                                            class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="source-name"><i class="fa-solid fa-newspaper text-primary"></i> Tuổi Trẻ
+                                    </div>
+                                </td>
+                                <td>Kinh doanh</td>
+                                <td><code class="rss-link">https://tuoitre.vn/rss/kinh-doanh.rss</code></td>
+                                <td><span class="status-badge-inline active"><i class="fa-solid fa-circle-check"></i>
+                                        Đang quét (10p/lần)</span></td>
+                                <td>
+                                    <button class="action-btn edit"><i class="fa-solid fa-pen"></i></button>
+                                    <button class="action-btn delete"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="source-name"><i class="fa-solid fa-newspaper text-primary"></i> Dân Trí
+                                    </div>
+                                </td>
+                                <td>Giáo dục</td>
+                                <td><code class="rss-link">https://dantri.com.vn/rss/giao-duc.rss</code></td>
+                                <td><span class="status-badge-inline error"><i
+                                            class="fa-solid fa-triangle-exclamation"></i> Lỗi (Timeout)</span></td>
+                                <td>
+                                    <button class="action-btn edit"><i class="fa-solid fa-pen"></i></button>
+                                    <button class="action-btn delete"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Script điều hướng giao diện -->
+    <script rel="script" src="js/index.js"></script>
+</body>
+
+
+</html>

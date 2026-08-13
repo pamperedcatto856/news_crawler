@@ -1,6 +1,3 @@
-CREATE DATABASE news_crawler;
-\c news_crawler; -- sử dụng cho psql
-
 CREATE TABLE sources (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
@@ -39,3 +36,11 @@ CREATE INDEX idx_articles_category_id ON articles(category_id);
 
 -- Tối ưu khi sắp xếp bài viết mới nhất (ORDER BY published_at DESC)
 CREATE INDEX idx_articles_published_at ON articles(published_at DESC);
+
+INSERT INTO sources (name, base_url, rss_url) VALUES 
+('VnExpress Events', 'https://vnexpress.net/thoi-su', 'https://vnexpress.net/rss/thoi-su.rss'),
+('VnExpress Business', 'https://vnexpress.net/kinh-doanh', 'https://vnexpress.net/rss/kinh-doanh.rss'),
+('VnExpress World', 'https://vnexpress.net/the-gioi', 'https://vnexpress.net/rss/the-gioi.rss'),
+('VnExpress Law', 'https://vnexpress.net/phap-luat', 'https://vnexpress.net/rss/phap-luat.rss'),
+('VnExpress Real Estate', 'https://vnexpress.net/bat-dong-san', 'https://vnexpress.net/rss/bat-dong-san.rss'),
+('VnExpress Sports', 'https://vnexpress.net/the-thao', 'https://vnexpress.net/rss/the-thao.rss');

@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL (Cơ sở dữ liệu chính - Operational/OLTP)
+  # Xử lý: Ràng buộc Unique URL, thao tác CRUD liên tục, lưu trạng thái crawler.
+  postgres:
+    image: postgres:16-alpine
+    container_name: news_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: news_crawler
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # 2. ClickHouse (Cơ sở dữ liệu phân tích - Analytical/OLAP)
+  # Xử lý: Lưu trữ lượng lớn dữ liệu bài viết lịch sử, truy vấn thống kê siêu tốc.
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest-alpine
+    container_name: news_clickhouse
+    restart: always
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: password
+      CLICKHOUSE_DB: default
+    ports:
+      - "8123:8123" # HTTP Port (Dùng cho GORM/Go)
+      - "9000:9000" # Native Port
+    volumes:
+      - chdata:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  # 3. Redis (Cache Server)
+  # Xử lý: Lưu trữ bộ đệm cho API trả về Frontend, giảm tải cho Postgres.
+  redis:
+    image: redis:7-alpine
+    container_name: news_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
+  chdata:
