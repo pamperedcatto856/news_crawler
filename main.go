@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -15,23 +15,44 @@ import (
 )
 
 func main() {
-	// 1. Load cấu hình môi trường
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println("Cảnh báo: Không thể tải file .env")
+	// 0. Khởi tạo Zap Logger và Bleve Index
+	backend.InitLogger()
+	backend.InitBleve()
+	
+	// Đảm bảo flush log trước khi thoát
+	defer backend.Logger.Sync()
+	if backend.SearchIndex != nil {
+		defer backend.SearchIndex.Close()
 	}
 
-	// 2. Khởi tạo kết nối Storage (Postgres)
+	// 1. Tải cấu hình biến môi trường
+	err := godotenv.Load()
+	if err != nil {
+		backend.Logger.Warn("Không tìm thấy file .env, sẽ sử dụng biến môi trường mặc định.")
+	}
+
+	// 2. Kết nối Database gốc (Postgres)
 	dsn := os.Getenv("DB_DSN")
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Lỗi kết nối DB: %v", err)
+		backend.Logger.Fatal("Lỗi kết nối DB", zap.Error(err))
 	}
 
-	// 3. Khởi tạo kết nối Cache (Redis)
+	// 3. Khởi tạo kết nối Cache (Redis) cho Web API
 	rdb := backend.InitRedis()
 
-	// 4. Kích hoạt Background Crawler Worker (Chạy ngầm)
-	// Crawler sẽ tự mở connection pool riêng bên trong nó để không ảnh hưởng luồng web
+	// 3.5. Kích hoạt Asynq Worker Server (Tiến trình ngầm xử lý lưu DB)
+	redisAddr := os.Getenv("REDIS_DSN")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+	redisAddr = strings.TrimPrefix(redisAddr, "redis://")
+	
+	chDB := backend.InitClickHouse() // Vẫn cần khởi tạo ở đây để truyền vào Worker
+	go backend.StartWorkerServer(redisAddr, db, chDB)
+
+	// 4. Kích hoạt Background Crawler Worker (Chạy ngầm lấy dữ liệu từ mạng)
+	// Crawler sẽ cào dữ liệu và ném vào Redis Queue thay vì tự lưu DB
 	go backend.StartCrawler()
 
 	// 5. Cấu hình Dispatcher (Web API & Static Files)
@@ -40,6 +61,7 @@ func main() {
 	// API Endpoints
 	mux.HandleFunc("/api/articles", backend.GetArticlesHandler(db, rdb))
 	mux.HandleFunc("/api/articles/", backend.GetArticleDetailHandler(db, rdb))
+	mux.HandleFunc("/api/search", backend.SearchArticlesHandler(db))
 
 	// Serve Frontend Static Files
 	fileServer := http.FileServer(http.Dir("./frontend"))
@@ -54,8 +76,8 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	fmt.Println("🚀 Web Server đang chạy tại: http://localhost:8080")
+	backend.Logger.Info("🚀 Web Server đang chạy tại: http://localhost:8080")
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Lỗi khởi động Server: %v", err)
+		backend.Logger.Fatal("Lỗi khởi động Server", zap.Error(err))
 	}
 }
